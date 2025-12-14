@@ -7,396 +7,185 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
+            --bg-primary: #f8fafc; --bg-secondary: #ffffff; --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b; --text-secondary: #64748b; --text-muted: #94a3b8;
             --border-color: #e2e8f0;
-            --accent-primary: #6366f1;
-            --accent-secondary: #8b5cf6;
+            --accent-primary: #6366f1; --accent-secondary: #8b5cf6;
             --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-            --success-color: #10b981;
-            --success-bg: rgba(16, 185, 129, 0.1);
-            --danger-color: #ef4444;
-            --danger-bg: rgba(239, 68, 68, 0.1);
+            --success-color: #10b981; --success-bg: rgba(16, 185, 129, 0.1);
+            --danger-color: #ef4444; --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning-color: #f59e0b;
             --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --title-gradient: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
         }
-
         [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
+            --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-tertiary: #334155;
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
             --border-color: #334155;
-            --accent-primary: #818cf8;
-            --accent-secondary: #a78bfa;
+            --accent-primary: #818cf8; --accent-secondary: #a78bfa;
             --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
             --title-gradient: linear-gradient(135deg, #fbbf24 0%, #f472b6 100%);
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            line-height: 1.7;
+            background: var(--bg-primary); color: var(--text-primary);
+            min-height: 100vh; line-height: 1.6;
             transition: background 0.3s, color 0.3s;
         }
-
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .container.wide { max-width: 100%; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        #login-screen {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+        /* Login */
+        #login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         #login-screen.hidden { display: none; }
-
-        .login-card {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 450px;
-            width: 100%;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--border-color);
-        }
-
-        .login-card h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            background: var(--title-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-
+        .login-card { background: var(--bg-secondary); border-radius: 16px; padding: 40px; max-width: 450px; width: 100%; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+        .login-card h1 { font-family: 'Playfair Display', serif; font-size: 2rem; background: var(--title-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 8px; }
         .login-card .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 24px; }
-
-        .login-card input {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-size: 1rem;
-            margin-bottom: 16px;
-            font-family: monospace;
-        }
-
+        .login-card input { width: 100%; padding: 14px 16px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; margin-bottom: 16px; font-family: monospace; }
         .login-card input:focus { outline: none; border-color: var(--accent-primary); }
-
-        .login-card button {
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            border: none;
-            background: var(--accent-gradient);
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
+        .login-card button { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--accent-gradient); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; }
         .login-card button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
         .login-card button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        .login-error {
-            color: var(--danger-color);
-            background: var(--danger-bg);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-            display: none;
-        }
+        .login-error { color: var(--danger-color); background: var(--danger-bg); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none; }
         .login-error.show { display: block; }
-
-        .security-note {
-            margin-top: 24px;
-            padding: 16px;
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
+        .security-note { margin-top: 24px; padding: 16px; background: var(--bg-tertiary); border-radius: 10px; font-size: 0.85rem; color: var(--text-secondary); }
         .security-note strong { color: var(--success-color); }
 
+        /* Main App */
         #main-app { display: none; }
         #main-app.active { display: block; }
-
-        .theme-toggle {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .logout-btn {
-            position: fixed;
-            top: 16px;
-            right: 70px;
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-secondary);
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            cursor: pointer;
-            z-index: 100;
-        }
+        .theme-toggle { position: fixed; top: 16px; right: 16px; width: 44px; height: 44px; border-radius: 12px; border: 2px solid var(--border-color); background: var(--bg-secondary); font-size: 20px; cursor: pointer; z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .logout-btn { position: fixed; top: 16px; right: 70px; padding: 10px 16px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-secondary); color: var(--text-secondary); font-size: 0.85rem; cursor: pointer; z-index: 100; }
 
         .hero { text-align: center; padding: 40px 20px; }
         .hero-icon { font-size: 64px; margin-bottom: 20px; }
-        .hero h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            background: var(--title-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        .hero-subtitle { color: var(--text-secondary); font-size: 1rem; }
+        .hero h1 { font-family: 'Playfair Display', serif; font-size: 2.2rem; background: var(--title-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .hero-subtitle { color: var(--text-secondary); }
 
-        .form-section {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-        }
-
+        /* Form */
+        .form-section { background: var(--bg-secondary); border-radius: 16px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--border-color); }
         .form-section h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         .form-row { display: flex; gap: 16px; margin-bottom: 16px; }
         .form-group { flex: 1; }
         .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; }
-
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px 14px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; }
+        .form-group textarea { min-height: 120px; font-family: monospace; font-size: 0.85rem; resize: vertical; }
         .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-
-        .toggle-item {
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-primary);
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .toggle-item { padding: 10px 12px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-primary); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
         .toggle-item:hover { border-color: var(--accent-primary); }
         .toggle-item.active { background: var(--accent-gradient); border-color: transparent; color: white; }
-
-        .btn-generate {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            border: none;
-            background: var(--accent-gradient);
-            color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: transform 0.2s;
-        }
+        .btn-generate { width: 100%; padding: 16px; border-radius: 12px; border: none; background: var(--accent-gradient); color: white; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 16px; }
         .btn-generate:hover { transform: translateY(-2px); }
         .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        #results { display: none; }
-        #results.active { display: block; }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .trip-info { display: flex; align-items: center; gap: 12px; }
-
-        .trip-id {
-            font-family: monospace;
-            font-size: 1.2rem;
-            font-weight: 600;
-            background: var(--accent-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .progress-bar { width: 200px; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+        /* Results - Two Column Layout */
+        #results { display: none; flex: 1; min-height: 0; }
+        #results.active { display: flex; flex-direction: column; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; }
+        .trip-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .trip-id { font-family: monospace; font-size: 1.2rem; font-weight: 600; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .progress-container { display: flex; align-items: center; gap: 12px; }
+        .progress-bar { width: 150px; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--success-color); transition: width 0.3s; }
         .progress-text { font-size: 0.85rem; color: var(--text-secondary); }
+        .weight-total { font-size: 0.9rem; color: var(--text-secondary); padding: 6px 12px; background: var(--bg-tertiary); border-radius: 8px; }
+        .btn-new-trip { padding: 10px 20px; border-radius: 10px; border: 2px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
 
-        .btn-new-trip {
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 2px solid var(--border-color);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
+        .results-layout { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+        .left-column { flex: 1; min-width: 300px; overflow-y: auto; padding: 20px; background: var(--bg-primary); }
+        .resize-handle { width: 8px; background: var(--border-color); cursor: col-resize; flex-shrink: 0; }
+        .resize-handle:hover { background: var(--accent-primary); }
+        .right-column { width: 350px; min-width: 280px; overflow-y: auto; padding: 20px; background: var(--bg-secondary); border-left: 1px solid var(--border-color); }
 
-        .packing-list { display: grid; gap: 16px; }
-
-        .category {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 16px;
-            border: 1px solid var(--border-color);
-        }
-
-        .category-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 600; }
-        .category-items { display: flex; flex-direction: column; gap: 8px; }
-
-        .item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            background: var(--bg-primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
+        /* Categories */
+        .category { background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border-color); }
+        .category-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 600; color: var(--text-primary); }
+        .category-items { display: flex; flex-direction: column; gap: 6px; }
+        .item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg-primary); border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
         .item:hover { background: var(--bg-tertiary); }
         .item.packed { opacity: 0.5; text-decoration: line-through; }
-
-        .item-checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+        .item.dragging { opacity: 0.5; border-color: var(--accent-primary); }
+        .item.in-bag { display: none; }
+        .item-checkbox { width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
         .item.packed .item-checkbox { background: var(--success-color); border-color: var(--success-color); color: white; }
         .item-name { flex: 1; }
-        .item-qty { font-size: 0.85rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; }
+        .item-qty { font-size: 0.8rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; cursor: pointer; }
+        .item-qty:hover { background: var(--accent-primary); color: white; }
+        .item-weight { font-size: 0.75rem; color: var(--text-muted); }
 
-        .trips-section {
-            background: var(--bg-secondary);
-            border-radius: 16px;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
+        /* Bags/Cubes */
+        .bags-section h3 { font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .bags-grid { display: flex; flex-direction: column; gap: 12px; }
+        .bag { background: var(--bg-primary); border-radius: 12px; padding: 16px; border: 2px solid var(--border-color); transition: all 0.2s; }
+        .bag.drag-over { border-color: var(--accent-primary); background: rgba(99, 102, 241, 0.1); }
+        .bag-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; cursor: pointer; }
+        .bag-emoji { font-size: 1.5rem; }
+        .bag-name { font-weight: 600; flex: 1; }
+        .bag-count { font-size: 0.8rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; }
+        .bag-weight { font-size: 0.8rem; color: var(--accent-primary); font-weight: 500; }
+        .bag-items { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color); }
+        .bag.expanded .bag-items { display: block; }
+        .bag-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 6px; font-size: 0.9rem; }
+        .bag-item-name { flex: 1; }
+        .bag-item-remove { color: var(--danger-color); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+        .bag-item-remove:hover { background: var(--danger-bg); }
+        .add-cube-btn { width: 100%; padding: 12px; border-radius: 10px; border: 2px dashed var(--border-color); background: transparent; color: var(--text-muted); cursor: pointer; margin-top: 12px; }
+        .add-cube-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
 
-        .trips-header {
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            background: var(--bg-tertiary);
-        }
+        /* Cube colors */
+        .bag.color-0 { border-left: 4px solid #6366f1; }
+        .bag.color-1 { border-left: 4px solid #8b5cf6; }
+        .bag.color-2 { border-left: 4px solid #ec4899; }
+        .bag.color-3 { border-left: 4px solid #f59e0b; }
+        .bag.color-4 { border-left: 4px solid #10b981; }
+        .bag.color-5 { border-left: 4px solid #06b6d4; }
+
+        /* Trips List */
+        .trips-section { background: var(--bg-secondary); border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border-color); overflow: hidden; }
+        .trips-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--bg-tertiary); }
         .trips-header h3 { display: flex; align-items: center; gap: 8px; }
-        .trips-content { display: none; padding: 16px; }
+        .trips-content { display: none; padding: 16px; max-height: 300px; overflow-y: auto; }
         .trips-section.expanded .trips-content { display: block; }
-
-        .trip-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            background: var(--bg-primary);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border: 1px solid var(--border-color);
-        }
+        .trip-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-primary); border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border-color); }
         .trip-item-name { font-family: monospace; font-weight: 600; }
         .trip-item-meta { font-size: 0.8rem; color: var(--text-muted); }
         .trip-item-actions { display: flex; gap: 8px; }
-
-        .trip-item-actions button {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
+        .trip-item-actions button { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; font-size: 0.8rem; }
         .trip-item-actions button.primary { background: var(--accent-gradient); border: none; color: white; }
         .trip-item-actions button.danger { color: var(--danger-color); }
-
         .empty-state { text-align: center; padding: 24px; color: var(--text-muted); }
 
-        .loading-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
+        /* Loading */
+        .loading-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .loading-overlay.hidden { display: none; }
         .loading-card { background: var(--bg-secondary); padding: 32px 48px; border-radius: 16px; text-align: center; }
-
-        .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid var(--border-color);
-            border-top-color: var(--accent-primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
+        .spinner { width: 48px; height: 48px; border: 4px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.hidden { display: none; }
+        .modal { background: var(--bg-secondary); border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; }
+        .modal h3 { margin-bottom: 16px; }
+        .modal input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); margin-bottom: 12px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-buttons button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
+        .modal-buttons .cancel { background: var(--bg-tertiary); color: var(--text-primary); }
+        .modal-buttons .confirm { background: var(--accent-gradient); color: white; }
     </style>
 </head>
 <body>
     <div id="login-screen">
         <div class="login-card">
             <h1>🧳 Trip Packing Wizard</h1>
-            <p class="subtitle">AI-powered packing lists for your adventures</p>
+            <p class="subtitle">AI-powered packing lists with bag organization</p>
             <div id="login-error" class="login-error"></div>
             <input type="password" id="api-key-input" placeholder="Enter your OpenAI API key (sk-...)" autocomplete="off">
             <button id="login-btn">Start Packing</button>
             <div class="security-note">
                 <strong>🔒 Your key stays private</strong><br>
-                Your API key is stored only in your browser's localStorage. It never touches our servers.
-                <a href="https://github.com/charignon/trip-planner-open" target="_blank">View source code</a> to verify.
+                Stored only in your browser. <a href="https://github.com/charignon/trip-planner-open" target="_blank">View source</a> to verify.
             </div>
         </div>
     </div>
@@ -405,11 +194,11 @@
         <button class="logout-btn" id="logout-btn">Logout</button>
         <button class="theme-toggle" id="theme-toggle"><span id="theme-icon">🌙</span></button>
 
-        <div class="container">
+        <div class="container" id="form-container">
             <div class="hero" id="hero">
                 <div class="hero-icon">🧳</div>
                 <h1>Trip Packing Wizard</h1>
-                <p class="hero-subtitle">Let AI help you pack smarter</p>
+                <p class="hero-subtitle">AI-powered packing with bag organization</p>
             </div>
 
             <div class="trips-section" id="trips-section">
@@ -448,21 +237,41 @@
                     <div class="toggle-grid" id="toggle-grid"></div>
                 </div>
 
+                <div class="form-section">
+                    <h2>📝 Custom Items (optional)</h2>
+                    <div class="form-group">
+                        <label>Add your own items to include</label>
+                        <textarea id="custom-items" placeholder="One item per line, e.g.:&#10;laptop&#10;camera&#10;hiking boots"></textarea>
+                    </div>
+                </div>
+
                 <button class="btn-generate" id="generate-btn">✨ Generate Packing List</button>
             </div>
+        </div>
 
-            <div id="results">
-                <div class="results-header">
-                    <div class="trip-info">
-                        <span class="trip-id" id="trip-id-display"></span>
-                        <div>
-                            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
-                            <div class="progress-text" id="progress-text">0% packed</div>
-                        </div>
+        <div id="results">
+            <div class="results-header">
+                <div class="trip-info">
+                    <span class="trip-id" id="trip-id-display"></span>
+                    <div class="progress-container">
+                        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                        <span class="progress-text" id="progress-text">0%</span>
                     </div>
-                    <button class="btn-new-trip" id="new-trip-btn">+ New Trip</button>
+                    <span class="weight-total" id="weight-total">0g total</span>
                 </div>
-                <div class="packing-list" id="packing-list"></div>
+                <button class="btn-new-trip" id="new-trip-btn">+ New Trip</button>
+            </div>
+            <div class="results-layout">
+                <div class="left-column" id="left-column"></div>
+                <div class="resize-handle" id="resize-handle"></div>
+                <div class="right-column">
+                    <div class="bags-section">
+                        <h3>🎒 Bags & Cubes</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Drag items here to organize</p>
+                        <div class="bags-grid" id="bags-grid"></div>
+                        <button class="add-cube-btn" id="add-cube-btn">+ Add Packing Cube</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -474,12 +283,24 @@
         </div>
     </div>
 
+    <div id="cube-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>Create Packing Cube</h3>
+            <input type="text" id="cube-name-input" placeholder="Cube name (e.g., Toiletries)">
+            <select id="cube-parent-select" style="width:100%;padding:12px;border-radius:8px;border:2px solid var(--border-color);background:var(--bg-primary);color:var(--text-primary);margin-bottom:12px;">
+                <option value="suitcase">🧳 In Suitcase</option>
+                <option value="backpack">🎒 In Backpack</option>
+            </select>
+            <div class="modal-buttons">
+                <button class="cancel" id="cube-cancel">Cancel</button>
+                <button class="confirm" id="cube-confirm">Create</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const PROXY_URL = 'https://trip-planner-proxy.l-charignon.workers.dev';
         const MODEL = 'gpt-4o';
-
-        let currentTrip = null;
-        let apiKey = null;
 
         const OPTIONS = [
             { id: 'work', label: '💼 Work Trip' },
@@ -490,21 +311,24 @@
             { id: 'cold', label: '❄️ Cold Weather' }
         ];
 
-        const CATEGORY_EMOJIS = {
-            'Clothes': '👕', 'Electronics': '🔌', 'Toiletries': '🧴',
-            'Documents': '📄', 'Medical': '💊', 'Accessories': '👜', 'Misc': '📦'
-        };
+        const CATEGORY_EMOJIS = { 'Clothes': '👕', 'Electronics': '🔌', 'Toiletries': '🧴', 'Documents': '📄', 'Medical': '💊', 'Accessories': '👜', 'Essentials': '🎒', 'Custom': '✨' };
+        const CUBE_EMOJIS = ['🧊', '📦', '👕', '🧴', '💊', '🔌', '📱', '👟'];
+        const ADJECTIVES = ['swift', 'brave', 'calm', 'eager', 'gentle', 'happy', 'jolly', 'keen', 'lively', 'merry', 'bright', 'cosmic', 'golden', 'stellar'];
+        const NOUNS = ['tiger', 'eagle', 'dolphin', 'falcon', 'panda', 'sunset', 'aurora', 'canyon', 'forest', 'harbor', 'island', 'ocean', 'phoenix', 'river'];
 
-        const ADJECTIVES = ['swift', 'brave', 'calm', 'eager', 'gentle', 'happy', 'jolly', 'keen', 'lively', 'merry', 'bright', 'cheerful', 'cosmic', 'golden', 'stellar'];
-        const NOUNS = ['tiger', 'eagle', 'dolphin', 'falcon', 'panda', 'sunset', 'aurora', 'canyon', 'forest', 'harbor', 'island', 'meadow', 'ocean', 'phoenix', 'river'];
+        let apiKey = null;
+        let currentTrip = null;
+        let draggedItemId = null;
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', init);
+
+        function init() {
             loadTheme();
             initToggleGrid();
             initEventListeners();
             apiKey = localStorage.getItem('openai_api_key');
             if (apiKey) showApp();
-        });
+        }
 
         function initToggleGrid() {
             const grid = document.getElementById('toggle-grid');
@@ -526,369 +350,514 @@
             document.getElementById('trips-header').addEventListener('click', toggleTrips);
             document.getElementById('generate-btn').addEventListener('click', generateList);
             document.getElementById('new-trip-btn').addEventListener('click', newTrip);
+            document.getElementById('add-cube-btn').addEventListener('click', () => document.getElementById('cube-modal').classList.remove('hidden'));
+            document.getElementById('cube-cancel').addEventListener('click', () => document.getElementById('cube-modal').classList.add('hidden'));
+            document.getElementById('cube-confirm').addEventListener('click', createCube);
+            document.getElementById('cube-name-input').addEventListener('keypress', e => { if (e.key === 'Enter') createCube(); });
+            initResize();
         }
 
+        function initResize() {
+            const handle = document.getElementById('resize-handle');
+            const left = document.getElementById('left-column');
+            let startX, startWidth;
+            handle.addEventListener('mousedown', e => {
+                startX = e.clientX;
+                startWidth = left.offsetWidth;
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('mouseup', () => document.removeEventListener('mousemove', resize));
+            });
+            function resize(e) {
+                left.style.flex = 'none';
+                left.style.width = (startWidth + e.clientX - startX) + 'px';
+            }
+        }
+
+        // Auth
         async function login() {
             const key = document.getElementById('api-key-input').value.trim();
-            if (!key.startsWith('sk-')) {
-                showLoginError('API key should start with sk-');
-                return;
-            }
-
+            if (!key.startsWith('sk-')) { showLoginError('API key should start with sk-'); return; }
             const btn = document.getElementById('login-btn');
-            btn.disabled = true;
-            btn.textContent = 'Validating...';
-
+            btn.disabled = true; btn.textContent = 'Validating...';
             try {
                 const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
                     body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 })
                 });
-
-                if (!resp.ok) {
-                    const err = await resp.json();
-                    throw new Error(err.error?.message || 'Invalid API key');
-                }
-
+                if (!resp.ok) throw new Error((await resp.json()).error?.message || 'Invalid API key');
                 apiKey = key;
                 localStorage.setItem('openai_api_key', key);
                 showApp();
-            } catch (err) {
-                showLoginError(err.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Start Packing';
-            }
+            } catch (err) { showLoginError(err.message); }
+            finally { btn.disabled = false; btn.textContent = 'Start Packing'; }
         }
 
-        function showLoginError(msg) {
-            const el = document.getElementById('login-error');
-            el.textContent = msg;
-            el.classList.add('show');
-        }
+        function showLoginError(msg) { const el = document.getElementById('login-error'); el.textContent = msg; el.classList.add('show'); }
+        function logout() { if (!confirm('Logout?')) return; localStorage.removeItem('openai_api_key'); apiKey = null; location.reload(); }
+        function showApp() { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('main-app').classList.add('active'); loadTrips(); }
+        function toggleTheme() { const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); localStorage.setItem('theme', t); document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙'; }
+        function loadTheme() { const t = localStorage.getItem('theme') || 'light'; document.documentElement.setAttribute('data-theme', t); document.getElementById('theme-icon').textContent = t === 'dark' ? '☀️' : '🌙'; }
 
-        function logout() {
-            if (!confirm('Logout? Your trips are saved locally.')) return;
-            localStorage.removeItem('openai_api_key');
-            apiKey = null;
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('main-app').classList.remove('active');
-            document.getElementById('api-key-input').value = '';
-            document.getElementById('login-error').classList.remove('show');
-        }
-
-        function showApp() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.add('active');
-            loadTrips();
-        }
-
-        function toggleTheme() {
-            const html = document.documentElement;
-            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-        }
-
-        function loadTheme() {
-            const theme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', theme);
-            document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-
-        function getOptions() {
-            const options = {};
-            document.querySelectorAll('.toggle-item').forEach(el => {
-                options[el.dataset.option] = el.classList.contains('active');
-            });
-            return options;
-        }
-
+        // Generate
         async function generateList() {
             const days = parseInt(document.getElementById('days').value) || 3;
             const tripType = document.getElementById('trip-type').value;
             const destination = document.getElementById('destination').value.trim() || 'Unknown';
-            const options = getOptions();
-
+            const customItems = document.getElementById('custom-items').value.trim();
+            const options = {};
+            document.querySelectorAll('.toggle-item').forEach(el => { options[el.dataset.option] = el.classList.contains('active'); });
             showLoading('Generating your packing list...');
-
-            const prompt = buildPrompt(days, tripType, options, destination);
-
             try {
                 const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-                    body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 2000 })
+                    body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: buildPrompt(days, tripType, options, destination, customItems) }], max_tokens: 3000 })
                 });
-
-                if (!resp.ok) {
-                    const err = await resp.json();
-                    throw new Error(err.error?.message || 'API request failed');
-                }
-
+                if (!resp.ok) throw new Error((await resp.json()).error?.message || 'API error');
                 const data = await resp.json();
-                const content = data.choices[0].message.content;
+                let content = data.choices[0].message.content;
+                if (content.includes('```json')) content = content.split('```json')[1].split('```')[0];
+                else if (content.includes('```')) content = content.split('```')[1].split('```')[0];
+                const parsed = JSON.parse(content.trim());
 
-                let parsed;
-                try {
-                    let jsonStr = content;
-                    if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0];
-                    else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0];
-                    parsed = JSON.parse(jsonStr.trim());
-                } catch (e) {
-                    throw new Error('Failed to parse AI response');
-                }
-
-                const tripId = generateTripId();
+                const tripId = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)] + '-' + NOUNS[Math.floor(Math.random() * NOUNS.length)];
                 currentTrip = {
                     id: tripId, destination, days, tripType, options,
-                    packingList: parsed.categories || parsed,
+                    categories: parsed.categories || parsed,
+                    bags: { suitcase: { emoji: '🧳', name: 'Suitcase', items: [], children: [] }, backpack: { emoji: '🎒', name: 'Backpack', items: [], children: [] } },
                     itemStates: {},
+                    cubeCounter: 0,
                     createdAt: new Date().toISOString()
                 };
-
+                // Initialize item states
+                let itemId = 0;
+                for (const [cat, items] of Object.entries(currentTrip.categories)) {
+                    for (const [name, details] of Object.entries(items)) {
+                        const id = 'item-' + (itemId++);
+                        currentTrip.itemStates[id] = { name, category: cat, qty: details.qty || 1, weight: details.weight || 0, packed: false, bag: null };
+                    }
+                }
+                // Apply suggested bags if provided
+                if (parsed.bags) {
+                    for (const bag of parsed.bags) {
+                        const cubeId = 'cube-' + (currentTrip.cubeCounter++);
+                        const parent = bag.parent === 'backpack' ? 'backpack' : 'suitcase';
+                        currentTrip.bags[cubeId] = { emoji: bag.emoji || '📦', name: bag.name, items: [], children: [], parent };
+                        currentTrip.bags[parent].children.push(cubeId);
+                        // Assign items to cube
+                        if (bag.items) {
+                            for (const itemName of bag.items) {
+                                const itemEntry = Object.entries(currentTrip.itemStates).find(([_, s]) => s.name.toLowerCase() === itemName.toLowerCase());
+                                if (itemEntry) { itemEntry[1].bag = cubeId; currentTrip.bags[cubeId].items.push(itemEntry[0]); }
+                            }
+                        }
+                    }
+                }
                 saveTrip(currentTrip);
                 showResults();
-            } catch (err) {
-                alert('Error: ' + err.message);
-            } finally {
-                hideLoading();
-            }
+            } catch (err) { alert('Error: ' + err.message); }
+            finally { hideLoading(); }
         }
 
-        function buildPrompt(days, tripType, options, destination) {
+        function buildPrompt(days, tripType, options, destination, customItems) {
             const typeDesc = { 'solo_day': 'solo day trip', 'solo_multi': 'solo multi-day trip', 'family_multi': 'family multi-day trip' }[tripType] || 'trip';
             const opts = [];
-            if (options.work) opts.push('work trip');
-            if (options.international) opts.push('international travel');
+            if (options.work) opts.push('work trip (need laptop, work clothes)');
+            if (options.international) opts.push('international (passport, adapter)');
             if (options.outdoor) opts.push('outdoor activities');
-            if (options.beach) opts.push('beach/pool');
-            if (options.formal) opts.push('formal event');
-            if (options.cold) opts.push('cold weather');
+            if (options.beach) opts.push('beach/pool (swimsuit, sunscreen)');
+            if (options.formal) opts.push('formal event (dress clothes)');
+            if (options.cold) opts.push('cold weather (warm layers)');
             const optsText = opts.length > 0 ? opts.join(', ') : 'standard trip';
+            const customSection = customItems ? `\n\nUser specifically requested these items be included:\n${customItems}` : '';
 
-            return `Generate a packing list for a ${days}-day ${typeDesc} to ${destination}.
-Trip characteristics: ${optsText}.
+            return `Generate a comprehensive packing list for a ${days}-day ${typeDesc} to ${destination}.
+Trip characteristics: ${optsText}.${customSection}
 
-Guidelines:
-- Clothes: underwear = days+1, socks = days+1, t-shirts = days, pants = ceil(days/2)
-- Always include: phone charger, toiletries basics, any medications
-- If work trip: add laptop, work clothes
-- If international: add passport, travel adapter
-- If formal: add dress clothes
-- If beach: add swimsuit, sunscreen
-- If cold: add warm layers, hat, gloves
-- If outdoor: add comfortable shoes, water bottle
+Packing formulas:
+- Underwear: days + 1
+- Socks: days + 1
+- T-shirts/tops: days
+- Pants/bottoms: ceil(days / 2)
+- Always include: phone charger, toiletries, any daily medications
 
-Return ONLY valid JSON (no markdown) with this structure:
+Return ONLY valid JSON with this structure:
 {
   "categories": {
-    "Clothes": {"t-shirt": {"qty": 3, "weight": 150}, "pants": {"qty": 2, "weight": 400}},
-    "Electronics": {"phone charger": {"qty": 1, "weight": 100}},
-    "Toiletries": {"toothbrush": {"qty": 1, "weight": 30}}
-  }
+    "Clothes": {"t-shirt": {"qty": 3, "weight": 150}, "underwear": {"qty": 4, "weight": 30}, "pants": {"qty": 2, "weight": 400}},
+    "Electronics": {"phone charger": {"qty": 1, "weight": 50}, "laptop": {"qty": 1, "weight": 1500}},
+    "Toiletries": {"toothbrush": {"qty": 1, "weight": 30}, "toothpaste": {"qty": 1, "weight": 100}},
+    "Documents": {"passport": {"qty": 1, "weight": 50}},
+    "Medical": {"medications": {"qty": 1, "weight": 100}},
+    "Essentials": {"wallet": {"qty": 1, "weight": 100}}
+  },
+  "bags": [
+    {"name": "Toiletry Bag", "emoji": "🧴", "parent": "suitcase", "items": ["toothbrush", "toothpaste"]},
+    {"name": "Tech Pouch", "emoji": "🔌", "parent": "backpack", "items": ["phone charger", "laptop"]}
+  ]
 }
-Each item needs qty (quantity) and weight (estimated grams per item).`;
+
+Each item needs: qty (quantity) and weight (grams per single item).
+Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use parent "suitcase" or "backpack".`;
         }
 
-        function generateTripId() {
-            const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
-            const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
-            return adj + '-' + noun;
-        }
-
+        // Display
         function showResults() {
+            document.getElementById('form-container').classList.add('wide');
             document.getElementById('form-section').style.display = 'none';
             document.getElementById('hero').style.display = 'none';
             document.getElementById('trips-section').style.display = 'none';
             document.getElementById('results').classList.add('active');
-            document.getElementById('trip-id-display').textContent = currentTrip.id;
-            renderPackingList();
-            updateProgress();
+            document.getElementById('trip-id-display').textContent = currentTrip.id + ' → ' + currentTrip.destination;
+            render();
         }
 
-        function renderPackingList() {
-            const container = document.getElementById('packing-list');
+        function render() {
+            renderCategories();
+            renderBags();
+            updateProgress();
+            updateTotalWeight();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('left-column');
             container.replaceChildren();
-
-            const list = currentTrip.packingList;
-            const states = currentTrip.itemStates;
-
-            for (const [category, items] of Object.entries(list)) {
-                const emoji = CATEGORY_EMOJIS[category] || '📦';
-
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category';
-
+            const categories = {};
+            for (const [id, state] of Object.entries(currentTrip.itemStates)) {
+                if (!categories[state.category]) categories[state.category] = [];
+                categories[state.category].push({ id, ...state });
+            }
+            for (const [catName, items] of Object.entries(categories)) {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category';
                 const header = document.createElement('div');
                 header.className = 'category-header';
-                header.textContent = emoji + ' ' + category;
-                categoryDiv.appendChild(header);
-
+                header.textContent = (CATEGORY_EMOJIS[catName] || '📦') + ' ' + catName;
+                catDiv.appendChild(header);
                 const itemsDiv = document.createElement('div');
                 itemsDiv.className = 'category-items';
-
-                for (const [item, details] of Object.entries(items)) {
-                    const itemId = category + ':' + item;
-                    const packed = states[itemId] || false;
-                    const qty = details.qty || 1;
-
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'item' + (packed ? ' packed' : '');
-                    itemDiv.addEventListener('click', () => toggleItem(itemId));
-
-                    const checkbox = document.createElement('div');
-                    checkbox.className = 'item-checkbox';
-                    checkbox.textContent = packed ? '✓' : '';
-                    itemDiv.appendChild(checkbox);
-
-                    const nameSpan = document.createElement('span');
-                    nameSpan.className = 'item-name';
-                    nameSpan.textContent = item;
-                    itemDiv.appendChild(nameSpan);
-
-                    if (qty > 1) {
-                        const qtySpan = document.createElement('span');
-                        qtySpan.className = 'item-qty';
-                        qtySpan.textContent = '×' + qty;
-                        itemDiv.appendChild(qtySpan);
-                    }
-
-                    itemsDiv.appendChild(itemDiv);
+                for (const item of items) {
+                    const el = createItemElement(item);
+                    itemsDiv.appendChild(el);
                 }
-
-                categoryDiv.appendChild(itemsDiv);
-                container.appendChild(categoryDiv);
+                catDiv.appendChild(itemsDiv);
+                container.appendChild(catDiv);
             }
         }
 
-        function toggleItem(itemId) {
-            currentTrip.itemStates[itemId] = !currentTrip.itemStates[itemId];
+        function createItemElement(item) {
+            const el = document.createElement('div');
+            el.className = 'item' + (item.packed ? ' packed' : '') + (item.bag ? ' in-bag' : '');
+            el.dataset.itemId = item.id;
+            el.draggable = true;
+            el.addEventListener('click', e => { if (!e.target.classList.contains('item-qty')) togglePacked(item.id); });
+            el.addEventListener('dragstart', e => { draggedItemId = item.id; el.classList.add('dragging'); });
+            el.addEventListener('dragend', () => { draggedItemId = null; el.classList.remove('dragging'); });
+
+            const checkbox = document.createElement('div');
+            checkbox.className = 'item-checkbox';
+            checkbox.textContent = item.packed ? '✓' : '';
+            el.appendChild(checkbox);
+
+            const name = document.createElement('span');
+            name.className = 'item-name';
+            name.textContent = item.name;
+            el.appendChild(name);
+
+            if (item.qty > 1) {
+                const qty = document.createElement('span');
+                qty.className = 'item-qty';
+                qty.textContent = '×' + item.qty;
+                qty.addEventListener('click', e => { e.stopPropagation(); editQty(item.id); });
+                el.appendChild(qty);
+            }
+
+            if (item.weight) {
+                const weight = document.createElement('span');
+                weight.className = 'item-weight';
+                weight.textContent = formatWeight(item.weight * item.qty);
+                el.appendChild(weight);
+            }
+            return el;
+        }
+
+        function renderBags() {
+            const grid = document.getElementById('bags-grid');
+            grid.replaceChildren();
+            let colorIdx = 0;
+            // Render main bags first
+            for (const bagId of ['suitcase', 'backpack']) {
+                const bag = currentTrip.bags[bagId];
+                grid.appendChild(createBagElement(bagId, bag, colorIdx++));
+            }
+            // Render standalone cubes
+            for (const [cubeId, cube] of Object.entries(currentTrip.bags)) {
+                if (cubeId === 'suitcase' || cubeId === 'backpack') continue;
+                if (!cube.parent) grid.appendChild(createBagElement(cubeId, cube, colorIdx++));
+            }
+        }
+
+        function createBagElement(bagId, bag, colorIdx) {
+            const el = document.createElement('div');
+            el.className = 'bag color-' + (colorIdx % 6);
+            el.dataset.bagId = bagId;
+
+            // Drop zone
+            el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+            el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+            el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag-over'); if (draggedItemId) moveItemToBag(draggedItemId, bagId); });
+
+            const header = document.createElement('div');
+            header.className = 'bag-header';
+            header.addEventListener('click', () => el.classList.toggle('expanded'));
+
+            const emoji = document.createElement('span');
+            emoji.className = 'bag-emoji';
+            emoji.textContent = bag.emoji;
+            header.appendChild(emoji);
+
+            const name = document.createElement('span');
+            name.className = 'bag-name';
+            name.textContent = bag.name;
+            header.appendChild(name);
+
+            const allItems = getAllBagItems(bagId);
+            if (allItems.length > 0) {
+                const count = document.createElement('span');
+                count.className = 'bag-count';
+                count.textContent = allItems.length + ' items';
+                header.appendChild(count);
+
+                const weight = document.createElement('span');
+                weight.className = 'bag-weight';
+                weight.textContent = formatWeight(getBagWeight(bagId));
+                header.appendChild(weight);
+            }
+            el.appendChild(header);
+
+            // Items section
+            const itemsDiv = document.createElement('div');
+            itemsDiv.className = 'bag-items';
+
+            // Direct items
+            for (const itemId of bag.items) {
+                const state = currentTrip.itemStates[itemId];
+                if (state) itemsDiv.appendChild(createBagItemElement(itemId, state, bagId));
+            }
+
+            // Child cubes
+            if (bag.children) {
+                for (const childId of bag.children) {
+                    const child = currentTrip.bags[childId];
+                    if (child) {
+                        const childEl = document.createElement('div');
+                        childEl.style.marginTop = '8px';
+                        childEl.style.padding = '8px';
+                        childEl.style.background = 'var(--bg-tertiary)';
+                        childEl.style.borderRadius = '8px';
+
+                        const childHeader = document.createElement('div');
+                        childHeader.style.fontWeight = '600';
+                        childHeader.style.marginBottom = '6px';
+                        childHeader.textContent = child.emoji + ' ' + child.name;
+
+                        const childWeight = document.createElement('span');
+                        childWeight.style.float = 'right';
+                        childWeight.style.fontSize = '0.8rem';
+                        childWeight.style.color = 'var(--accent-primary)';
+                        childWeight.textContent = formatWeight(getBagWeight(childId));
+                        childHeader.appendChild(childWeight);
+
+                        childEl.appendChild(childHeader);
+
+                        // Make child a drop zone too
+                        childEl.addEventListener('dragover', e => { e.preventDefault(); e.stopPropagation(); childEl.style.outline = '2px solid var(--accent-primary)'; });
+                        childEl.addEventListener('dragleave', () => childEl.style.outline = 'none');
+                        childEl.addEventListener('drop', e => { e.preventDefault(); e.stopPropagation(); childEl.style.outline = 'none'; if (draggedItemId) moveItemToBag(draggedItemId, childId); });
+
+                        for (const itemId of child.items) {
+                            const state = currentTrip.itemStates[itemId];
+                            if (state) childEl.appendChild(createBagItemElement(itemId, state, childId));
+                        }
+                        itemsDiv.appendChild(childEl);
+                    }
+                }
+            }
+
+            el.appendChild(itemsDiv);
+            return el;
+        }
+
+        function createBagItemElement(itemId, state, bagId) {
+            const el = document.createElement('div');
+            el.className = 'bag-item';
+
+            const name = document.createElement('span');
+            name.className = 'bag-item-name';
+            name.textContent = state.name + (state.qty > 1 ? ' ×' + state.qty : '');
+            el.appendChild(name);
+
+            if (state.weight) {
+                const w = document.createElement('span');
+                w.style.fontSize = '0.8rem';
+                w.style.color = 'var(--text-muted)';
+                w.textContent = formatWeight(state.weight * state.qty);
+                el.appendChild(w);
+            }
+
+            const remove = document.createElement('span');
+            remove.className = 'bag-item-remove';
+            remove.textContent = '✕';
+            remove.addEventListener('click', () => removeItemFromBag(itemId, bagId));
+            el.appendChild(remove);
+
+            return el;
+        }
+
+        function getAllBagItems(bagId) {
+            const bag = currentTrip.bags[bagId];
+            if (!bag) return [];
+            let items = [...bag.items];
+            if (bag.children) {
+                for (const childId of bag.children) {
+                    items = items.concat(getAllBagItems(childId));
+                }
+            }
+            return items;
+        }
+
+        function getBagWeight(bagId) {
+            let total = 0;
+            for (const itemId of getAllBagItems(bagId)) {
+                const state = currentTrip.itemStates[itemId];
+                if (state && state.weight) total += state.weight * state.qty;
+            }
+            return total;
+        }
+
+        function formatWeight(g) {
+            if (g >= 1000) return (g / 1000).toFixed(1) + 'kg';
+            return Math.round(g) + 'g';
+        }
+
+        // Actions
+        function togglePacked(itemId) {
+            currentTrip.itemStates[itemId].packed = !currentTrip.itemStates[itemId].packed;
             saveTrip(currentTrip);
-            renderPackingList();
-            updateProgress();
+            render();
+        }
+
+        function editQty(itemId) {
+            const state = currentTrip.itemStates[itemId];
+            const newQty = prompt('Quantity for "' + state.name + '":', state.qty);
+            if (newQty === null) return;
+            const parsed = parseInt(newQty);
+            if (isNaN(parsed) || parsed < 1) return;
+            state.qty = parsed;
+            saveTrip(currentTrip);
+            render();
+        }
+
+        function moveItemToBag(itemId, bagId) {
+            const state = currentTrip.itemStates[itemId];
+            // Remove from current bag if any
+            if (state.bag && currentTrip.bags[state.bag]) {
+                currentTrip.bags[state.bag].items = currentTrip.bags[state.bag].items.filter(id => id !== itemId);
+            }
+            // Add to new bag
+            state.bag = bagId;
+            if (!currentTrip.bags[bagId].items.includes(itemId)) {
+                currentTrip.bags[bagId].items.push(itemId);
+            }
+            saveTrip(currentTrip);
+            render();
+        }
+
+        function removeItemFromBag(itemId, bagId) {
+            currentTrip.itemStates[itemId].bag = null;
+            currentTrip.bags[bagId].items = currentTrip.bags[bagId].items.filter(id => id !== itemId);
+            saveTrip(currentTrip);
+            render();
+        }
+
+        function createCube() {
+            const name = document.getElementById('cube-name-input').value.trim();
+            if (!name) return;
+            const parent = document.getElementById('cube-parent-select').value;
+            const cubeId = 'cube-' + (currentTrip.cubeCounter++);
+            const emoji = CUBE_EMOJIS[currentTrip.cubeCounter % CUBE_EMOJIS.length];
+            currentTrip.bags[cubeId] = { emoji, name, items: [], children: [], parent };
+            currentTrip.bags[parent].children.push(cubeId);
+            document.getElementById('cube-name-input').value = '';
+            document.getElementById('cube-modal').classList.add('hidden');
+            saveTrip(currentTrip);
+            render();
         }
 
         function updateProgress() {
-            const list = currentTrip.packingList;
-            const states = currentTrip.itemStates;
-            let total = 0, packed = 0;
-            for (const [category, items] of Object.entries(list)) {
-                for (const item of Object.keys(items)) {
-                    total++;
-                    if (states[category + ':' + item]) packed++;
-                }
-            }
-            const pct = total > 0 ? Math.round((packed / total) * 100) : 0;
+            const states = Object.values(currentTrip.itemStates);
+            const total = states.length;
+            const done = states.filter(s => s.packed || s.bag).length;
+            const pct = total > 0 ? Math.round((done / total) * 100) : 0;
             document.getElementById('progress-fill').style.width = pct + '%';
-            document.getElementById('progress-text').textContent = pct + '% packed (' + packed + '/' + total + ')';
+            document.getElementById('progress-text').textContent = pct + '% (' + done + '/' + total + ')';
+        }
+
+        function updateTotalWeight() {
+            let total = 0;
+            for (const state of Object.values(currentTrip.itemStates)) {
+                if (state.weight) total += state.weight * state.qty;
+            }
+            document.getElementById('weight-total').textContent = formatWeight(total) + ' total';
         }
 
         function newTrip() {
-            if (currentTrip && !confirm('Start a new trip?')) return;
+            if (currentTrip && !confirm('Start new trip?')) return;
             currentTrip = null;
+            document.getElementById('form-container').classList.remove('wide');
             document.getElementById('results').classList.remove('active');
             document.getElementById('form-section').style.display = 'block';
             document.getElementById('hero').style.display = 'block';
             document.getElementById('trips-section').style.display = 'block';
             document.getElementById('destination').value = '';
+            document.getElementById('custom-items').value = '';
             document.querySelectorAll('.toggle-item').forEach(el => el.classList.remove('active'));
             loadTrips();
         }
 
-        function saveTrip(trip) {
-            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
-            trips[trip.id] = trip;
-            localStorage.setItem('trips', JSON.stringify(trips));
-        }
+        // Storage
+        function saveTrip(trip) { const trips = JSON.parse(localStorage.getItem('trips') || '{}'); trips[trip.id] = trip; localStorage.setItem('trips', JSON.stringify(trips)); }
+        function loadTripById(id) { return JSON.parse(localStorage.getItem('trips') || '{}')[id]; }
+        function deleteTripById(id) { if (!confirm('Delete "' + id + '"?')) return; const trips = JSON.parse(localStorage.getItem('trips') || '{}'); delete trips[id]; localStorage.setItem('trips', JSON.stringify(trips)); loadTrips(); }
+        function openTripById(id) { currentTrip = loadTripById(id); if (currentTrip) showResults(); }
 
-        function loadTripById(tripId) {
-            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
-            return trips[tripId];
-        }
-
-        function deleteTripById(tripId) {
-            if (!confirm('Delete trip "' + tripId + '"?')) return;
-            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
-            delete trips[tripId];
-            localStorage.setItem('trips', JSON.stringify(trips));
-            loadTrips();
-        }
-
-        function openTripById(tripId) {
-            currentTrip = loadTripById(tripId);
-            if (currentTrip) showResults();
-        }
-
-        function toggleTrips() {
-            document.getElementById('trips-section').classList.toggle('expanded');
-        }
+        function toggleTrips() { document.getElementById('trips-section').classList.toggle('expanded'); }
 
         function loadTrips() {
-            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
-            const tripList = Object.values(trips).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-            document.getElementById('trips-count').textContent = '(' + tripList.length + ')';
-
+            const trips = Object.values(JSON.parse(localStorage.getItem('trips') || '{}')).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            document.getElementById('trips-count').textContent = '(' + trips.length + ')';
             const content = document.getElementById('trips-content');
             content.replaceChildren();
-
-            if (tripList.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = 'empty-state';
-                empty.textContent = 'No trips yet. Create one above!';
-                content.appendChild(empty);
-                return;
-            }
-
-            const typeLabels = { 'solo_day': 'Solo Day', 'solo_multi': 'Solo Multi-Day', 'family_multi': 'Family' };
-
-            tripList.forEach(trip => {
-                const div = document.createElement('div');
-                div.className = 'trip-item';
-
+            if (trips.length === 0) { const empty = document.createElement('div'); empty.className = 'empty-state'; empty.textContent = 'No trips yet'; content.appendChild(empty); return; }
+            const labels = { 'solo_day': 'Day', 'solo_multi': 'Solo', 'family_multi': 'Family' };
+            for (const trip of trips) {
+                const el = document.createElement('div');
+                el.className = 'trip-item';
                 const info = document.createElement('div');
-                const name = document.createElement('div');
-                name.className = 'trip-item-name';
-                name.textContent = trip.id;
-                info.appendChild(name);
-
-                const meta = document.createElement('div');
-                meta.className = 'trip-item-meta';
-                meta.textContent = (trip.destination || 'Unknown') + ' · ' + (typeLabels[trip.tripType] || 'Trip') + ' · ' + trip.days + ' days';
-                info.appendChild(meta);
-                div.appendChild(info);
-
-                const actions = document.createElement('div');
-                actions.className = 'trip-item-actions';
-
-                const openBtn = document.createElement('button');
-                openBtn.className = 'primary';
-                openBtn.textContent = 'Open';
-                openBtn.addEventListener('click', () => openTripById(trip.id));
-                actions.appendChild(openBtn);
-
-                const delBtn = document.createElement('button');
-                delBtn.className = 'danger';
-                delBtn.textContent = 'Delete';
-                delBtn.addEventListener('click', () => deleteTripById(trip.id));
-                actions.appendChild(delBtn);
-
-                div.appendChild(actions);
-                content.appendChild(div);
-            });
+                const n = document.createElement('div'); n.className = 'trip-item-name'; n.textContent = trip.id; info.appendChild(n);
+                const m = document.createElement('div'); m.className = 'trip-item-meta'; m.textContent = (trip.destination || '?') + ' · ' + (labels[trip.tripType] || '') + ' · ' + trip.days + 'd'; info.appendChild(m);
+                el.appendChild(info);
+                const actions = document.createElement('div'); actions.className = 'trip-item-actions';
+                const open = document.createElement('button'); open.className = 'primary'; open.textContent = 'Open'; open.addEventListener('click', () => openTripById(trip.id)); actions.appendChild(open);
+                const del = document.createElement('button'); del.className = 'danger'; del.textContent = 'Delete'; del.addEventListener('click', () => deleteTripById(trip.id)); actions.appendChild(del);
+                el.appendChild(actions);
+                content.appendChild(el);
+            }
         }
 
-        function showLoading(text) {
-            document.getElementById('loading-text').textContent = text;
-            document.getElementById('loading').classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
-        }
+        function showLoading(text) { document.getElementById('loading-text').textContent = text; document.getElementById('loading').classList.remove('hidden'); }
+        function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
     </script>
 </body>
 </html>
