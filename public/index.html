@@ -1,3 +1,4 @@
+<!-- v2.0 - fixed layout and items start unpacked -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,9 +81,9 @@
         .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
         /* Results - Two Column Layout */
-        #results { display: none; flex: 1; min-height: 0; }
-        #results.active { display: flex; flex-direction: column; }
-        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 12px; }
+        #results { display: none; }
+        #results.active { display: flex; flex-direction: column; height: calc(100vh - 60px); }
+        .results-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
         .trip-info { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .trip-id { font-family: monospace; font-size: 1.2rem; font-weight: 600; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .progress-container { display: flex; align-items: center; gap: 12px; }
@@ -113,6 +114,9 @@
         .item-qty { font-size: 0.8rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; cursor: pointer; }
         .item-qty:hover { background: var(--accent-primary); color: white; }
         .item-weight { font-size: 0.75rem; color: var(--text-muted); }
+        .add-item-btn { width: 100%; padding: 8px; margin-top: 8px; border-radius: 8px; border: 2px dashed var(--border-color); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; }
+        .add-item-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+        .add-item-btn:disabled { opacity: 0.5; cursor: wait; }
 
         /* Bags/Cubes */
         .bags-section h3 { font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -430,28 +434,12 @@
                     cubeCounter: 0,
                     createdAt: new Date().toISOString()
                 };
-                // Initialize item states
+                // Initialize item states - all items start unpacked
                 let itemId = 0;
                 for (const [cat, items] of Object.entries(currentTrip.categories)) {
                     for (const [name, details] of Object.entries(items)) {
                         const id = 'item-' + (itemId++);
                         currentTrip.itemStates[id] = { name, category: cat, qty: details.qty || 1, weight: details.weight || 0, packed: false, bag: null };
-                    }
-                }
-                // Apply suggested bags if provided
-                if (parsed.bags) {
-                    for (const bag of parsed.bags) {
-                        const cubeId = 'cube-' + (currentTrip.cubeCounter++);
-                        const parent = bag.parent === 'backpack' ? 'backpack' : 'suitcase';
-                        currentTrip.bags[cubeId] = { emoji: bag.emoji || '📦', name: bag.name, items: [], children: [], parent };
-                        currentTrip.bags[parent].children.push(cubeId);
-                        // Assign items to cube
-                        if (bag.items) {
-                            for (const itemName of bag.items) {
-                                const itemEntry = Object.entries(currentTrip.itemStates).find(([_, s]) => s.name.toLowerCase() === itemName.toLowerCase());
-                                if (itemEntry) { itemEntry[1].bag = cubeId; currentTrip.bags[cubeId].items.push(itemEntry[0]); }
-                            }
-                        }
                     }
                 }
                 saveTrip(currentTrip);
@@ -491,23 +479,15 @@ Return ONLY valid JSON with this structure:
     "Documents": {"passport": {"qty": 1, "weight": 50}},
     "Medical": {"medications": {"qty": 1, "weight": 100}},
     "Essentials": {"wallet": {"qty": 1, "weight": 100}}
-  },
-  "bags": [
-    {"name": "Toiletry Bag", "emoji": "🧴", "parent": "suitcase", "items": ["toothbrush", "toothpaste"]},
-    {"name": "Tech Pouch", "emoji": "🔌", "parent": "backpack", "items": ["phone charger", "laptop"]}
-  ]
+  }
 }
 
-Each item needs: qty (quantity) and weight (grams per single item).
-Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use parent "suitcase" or "backpack".`;
+Each item needs: qty (quantity) and weight (grams per single item).`;
         }
 
         // Display
         function showResults() {
-            document.getElementById('form-container').classList.add('wide');
-            document.getElementById('form-section').style.display = 'none';
-            document.getElementById('hero').style.display = 'none';
-            document.getElementById('trips-section').style.display = 'none';
+            document.getElementById('form-container').style.display = 'none';
             document.getElementById('results').classList.add('active');
             document.getElementById('trip-id-display').textContent = currentTrip.id + ' → ' + currentTrip.destination;
             render();
@@ -541,6 +521,12 @@ Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use par
                     const el = createItemElement(item);
                     itemsDiv.appendChild(el);
                 }
+                // Add item button
+                const addBtn = document.createElement('button');
+                addBtn.className = 'add-item-btn';
+                addBtn.textContent = '+ Add Item';
+                addBtn.addEventListener('click', () => addNewItem(catName));
+                itemsDiv.appendChild(addBtn);
                 catDiv.appendChild(itemsDiv);
                 container.appendChild(catDiv);
             }
@@ -565,13 +551,11 @@ Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use par
             name.textContent = item.name;
             el.appendChild(name);
 
-            if (item.qty > 1) {
-                const qty = document.createElement('span');
-                qty.className = 'item-qty';
-                qty.textContent = '×' + item.qty;
-                qty.addEventListener('click', e => { e.stopPropagation(); editQty(item.id); });
-                el.appendChild(qty);
-            }
+            const qty = document.createElement('span');
+            qty.className = 'item-qty';
+            qty.textContent = '×' + item.qty;
+            qty.addEventListener('click', e => { e.stopPropagation(); editQty(item.id); });
+            el.appendChild(qty);
 
             if (item.weight) {
                 const weight = document.createElement('span');
@@ -759,6 +743,37 @@ Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use par
             render();
         }
 
+        async function addNewItem(category) {
+            const name = prompt('Item name:');
+            if (!name || !name.trim()) return;
+            const itemName = name.trim();
+
+            // Get AI weight estimate
+            let weight = 100; // default
+            try {
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: `Estimate the weight in grams of a typical "${itemName}" for packing. Reply with ONLY a number (no units, no explanation). Example: if asked about "t-shirt", reply "150"` }],
+                        max_tokens: 10
+                    })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const parsed = parseInt(data.choices[0].message.content.trim());
+                    if (!isNaN(parsed) && parsed > 0) weight = parsed;
+                }
+            } catch (e) { console.log('Weight estimate failed, using default'); }
+
+            // Add item
+            const itemId = 'item-' + Date.now();
+            currentTrip.itemStates[itemId] = { name: itemName, category, qty: 1, weight, packed: false, bag: null };
+            saveTrip(currentTrip);
+            render();
+        }
+
         function moveItemToBag(itemId, bagId) {
             const state = currentTrip.itemStates[itemId];
             // Remove from current bag if any
@@ -815,11 +830,8 @@ Suggest 2-4 packing cubes/pouches in the "bags" array to organize items. Use par
         function newTrip() {
             if (currentTrip && !confirm('Start new trip?')) return;
             currentTrip = null;
-            document.getElementById('form-container').classList.remove('wide');
+            document.getElementById('form-container').style.display = 'block';
             document.getElementById('results').classList.remove('active');
-            document.getElementById('form-section').style.display = 'block';
-            document.getElementById('hero').style.display = 'block';
-            document.getElementById('trips-section').style.display = 'block';
             document.getElementById('destination').value = '';
             document.getElementById('custom-items').value = '';
             document.querySelectorAll('.toggle-item').forEach(el => el.classList.remove('active'));
