@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Packing Wizard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --success-color: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --danger-color: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --title-gradient: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #334155;
+            --accent-primary: #818cf8;
+            --accent-secondary: #a78bfa;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --title-gradient: linear-gradient(135deg, #fbbf24 0%, #f472b6 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.7;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+
+        #login-screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #login-screen.hidden { display: none; }
+
+        .login-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .login-card h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            background: var(--title-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .login-card .subtitle { text-align: center; color: var(--text-secondary); margin-bottom: 24px; }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 16px;
+            font-family: monospace;
+        }
+
+        .login-card input:focus { outline: none; border-color: var(--accent-primary); }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent-gradient);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .login-card button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
+        .login-card button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .login-error {
+            color: var(--danger-color);
+            background: var(--danger-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .login-error.show { display: block; }
+
+        .security-note {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .security-note strong { color: var(--success-color); }
+
+        #main-app { display: none; }
+        #main-app.active { display: block; }
+
+        .theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 16px;
+            right: 70px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .hero { text-align: center; padding: 40px 20px; }
+        .hero-icon { font-size: 64px; margin-bottom: 20px; }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            background: var(--title-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .hero-subtitle { color: var(--text-secondary); font-size: 1rem; }
+
+        .form-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .form-section h2 { font-size: 1.1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .form-row { display: flex; gap: 16px; margin-bottom: 16px; }
+        .form-group { flex: 1; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .toggle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+
+        .toggle-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-primary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toggle-item:hover { border-color: var(--accent-primary); }
+        .toggle-item.active { background: var(--accent-gradient); border-color: transparent; color: white; }
+
+        .btn-generate {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent-gradient);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s;
+        }
+        .btn-generate:hover { transform: translateY(-2px); }
+        .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        #results { display: none; }
+        #results.active { display: block; }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .trip-info { display: flex; align-items: center; gap: 12px; }
+
+        .trip-id {
+            font-family: monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .progress-bar { width: 200px; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--success-color); transition: width 0.3s; }
+        .progress-text { font-size: 0.85rem; color: var(--text-secondary); }
+
+        .btn-new-trip {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .packing-list { display: grid; gap: 16px; }
+
+        .category {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 600; }
+        .category-items { display: flex; flex-direction: column; gap: 8px; }
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .item:hover { background: var(--bg-tertiary); }
+        .item.packed { opacity: 0.5; text-decoration: line-through; }
+
+        .item-checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .item.packed .item-checkbox { background: var(--success-color); border-color: var(--success-color); color: white; }
+        .item-name { flex: 1; }
+        .item-qty { font-size: 0.85rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; }
+
+        .trips-section {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .trips-header {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+        }
+        .trips-header h3 { display: flex; align-items: center; gap: 8px; }
+        .trips-content { display: none; padding: 16px; }
+        .trips-section.expanded .trips-content { display: block; }
+
+        .trip-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .trip-item-name { font-family: monospace; font-weight: 600; }
+        .trip-item-meta { font-size: 0.8rem; color: var(--text-muted); }
+        .trip-item-actions { display: flex; gap: 8px; }
+
+        .trip-item-actions button {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .trip-item-actions button.primary { background: var(--accent-gradient); border: none; color: white; }
+        .trip-item-actions button.danger { color: var(--danger-color); }
+
+        .empty-state { text-align: center; padding: 24px; color: var(--text-muted); }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .loading-overlay.hidden { display: none; }
+        .loading-card { background: var(--bg-secondary); padding: 32px 48px; border-radius: 16px; text-align: center; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div class="login-card">
+            <h1>🧳 Trip Packing Wizard</h1>
+            <p class="subtitle">AI-powered packing lists for your adventures</p>
+            <div id="login-error" class="login-error"></div>
+            <input type="password" id="api-key-input" placeholder="Enter your OpenAI API key (sk-...)" autocomplete="off">
+            <button id="login-btn">Start Packing</button>
+            <div class="security-note">
+                <strong>🔒 Your key stays private</strong><br>
+                Your API key is stored only in your browser's localStorage. It never touches our servers.
+                <a href="https://github.com/charignon/trip-planner-open" target="_blank">View source code</a> to verify.
+            </div>
+        </div>
+    </div>
+
+    <div id="main-app">
+        <button class="logout-btn" id="logout-btn">Logout</button>
+        <button class="theme-toggle" id="theme-toggle"><span id="theme-icon">🌙</span></button>
+
+        <div class="container">
+            <div class="hero" id="hero">
+                <div class="hero-icon">🧳</div>
+                <h1>Trip Packing Wizard</h1>
+                <p class="hero-subtitle">Let AI help you pack smarter</p>
+            </div>
+
+            <div class="trips-section" id="trips-section">
+                <div class="trips-header" id="trips-header">
+                    <h3>📂 Your Trips <span id="trips-count"></span></h3>
+                    <span>▼</span>
+                </div>
+                <div class="trips-content" id="trips-content"></div>
+            </div>
+
+            <div id="form-section">
+                <div class="form-section">
+                    <h2>📍 Trip Details</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Destination</label>
+                            <input type="text" id="destination" placeholder="Where are you going?">
+                        </div>
+                        <div class="form-group">
+                            <label>Days</label>
+                            <input type="number" id="days" value="3" min="1" max="30">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Trip Type</label>
+                        <select id="trip-type">
+                            <option value="solo_day">Solo Day Trip</option>
+                            <option value="solo_multi" selected>Solo Multi-Day</option>
+                            <option value="family_multi">Family Trip</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>⚡ Trip Options</h2>
+                    <div class="toggle-grid" id="toggle-grid"></div>
+                </div>
+
+                <button class="btn-generate" id="generate-btn">✨ Generate Packing List</button>
+            </div>
+
+            <div id="results">
+                <div class="results-header">
+                    <div class="trip-info">
+                        <span class="trip-id" id="trip-id-display"></span>
+                        <div>
+                            <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+                            <div class="progress-text" id="progress-text">0% packed</div>
+                        </div>
+                    </div>
+                    <button class="btn-new-trip" id="new-trip-btn">+ New Trip</button>
+                </div>
+                <div class="packing-list" id="packing-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading-overlay hidden">
+        <div class="loading-card">
+            <div class="spinner"></div>
+            <div id="loading-text">Generating your packing list...</div>
+        </div>
+    </div>
+
+    <script>
+        const PROXY_URL = 'https://trip-planner-proxy.l-charignon.workers.dev';
+        const MODEL = 'gpt-4o';
+
+        let currentTrip = null;
+        let apiKey = null;
+
+        const OPTIONS = [
+            { id: 'work', label: '💼 Work Trip' },
+            { id: 'international', label: '🌍 International' },
+            { id: 'outdoor', label: '🏕️ Outdoor' },
+            { id: 'beach', label: '🏖️ Beach/Pool' },
+            { id: 'formal', label: '👔 Formal Event' },
+            { id: 'cold', label: '❄️ Cold Weather' }
+        ];
+
+        const CATEGORY_EMOJIS = {
+            'Clothes': '👕', 'Electronics': '🔌', 'Toiletries': '🧴',
+            'Documents': '📄', 'Medical': '💊', 'Accessories': '👜', 'Misc': '📦'
+        };
+
+        const ADJECTIVES = ['swift', 'brave', 'calm', 'eager', 'gentle', 'happy', 'jolly', 'keen', 'lively', 'merry', 'bright', 'cheerful', 'cosmic', 'golden', 'stellar'];
+        const NOUNS = ['tiger', 'eagle', 'dolphin', 'falcon', 'panda', 'sunset', 'aurora', 'canyon', 'forest', 'harbor', 'island', 'meadow', 'ocean', 'phoenix', 'river'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            initToggleGrid();
+            initEventListeners();
+            apiKey = localStorage.getItem('openai_api_key');
+            if (apiKey) showApp();
+        });
+
+        function initToggleGrid() {
+            const grid = document.getElementById('toggle-grid');
+            OPTIONS.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'toggle-item';
+                div.dataset.option = opt.id;
+                div.textContent = opt.label;
+                div.addEventListener('click', () => div.classList.toggle('active'));
+                grid.appendChild(div);
+            });
+        }
+
+        function initEventListeners() {
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('api-key-input').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+            document.getElementById('trips-header').addEventListener('click', toggleTrips);
+            document.getElementById('generate-btn').addEventListener('click', generateList);
+            document.getElementById('new-trip-btn').addEventListener('click', newTrip);
+        }
+
+        async function login() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (!key.startsWith('sk-')) {
+                showLoginError('API key should start with sk-');
+                return;
+            }
+
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            btn.textContent = 'Validating...';
+
+            try {
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                    body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error?.message || 'Invalid API key');
+                }
+
+                apiKey = key;
+                localStorage.setItem('openai_api_key', key);
+                showApp();
+            } catch (err) {
+                showLoginError(err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Start Packing';
+            }
+        }
+
+        function showLoginError(msg) {
+            const el = document.getElementById('login-error');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        function logout() {
+            if (!confirm('Logout? Your trips are saved locally.')) return;
+            localStorage.removeItem('openai_api_key');
+            apiKey = null;
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('main-app').classList.remove('active');
+            document.getElementById('api-key-input').value = '';
+            document.getElementById('login-error').classList.remove('show');
+        }
+
+        function showApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.add('active');
+            loadTrips();
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-icon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function getOptions() {
+            const options = {};
+            document.querySelectorAll('.toggle-item').forEach(el => {
+                options[el.dataset.option] = el.classList.contains('active');
+            });
+            return options;
+        }
+
+        async function generateList() {
+            const days = parseInt(document.getElementById('days').value) || 3;
+            const tripType = document.getElementById('trip-type').value;
+            const destination = document.getElementById('destination').value.trim() || 'Unknown';
+            const options = getOptions();
+
+            showLoading('Generating your packing list...');
+
+            const prompt = buildPrompt(days, tripType, options, destination);
+
+            try {
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({ model: MODEL, messages: [{ role: 'user', content: prompt }], max_tokens: 2000 })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.error?.message || 'API request failed');
+                }
+
+                const data = await resp.json();
+                const content = data.choices[0].message.content;
+
+                let parsed;
+                try {
+                    let jsonStr = content;
+                    if (content.includes('```json')) jsonStr = content.split('```json')[1].split('```')[0];
+                    else if (content.includes('```')) jsonStr = content.split('```')[1].split('```')[0];
+                    parsed = JSON.parse(jsonStr.trim());
+                } catch (e) {
+                    throw new Error('Failed to parse AI response');
+                }
+
+                const tripId = generateTripId();
+                currentTrip = {
+                    id: tripId, destination, days, tripType, options,
+                    packingList: parsed.categories || parsed,
+                    itemStates: {},
+                    createdAt: new Date().toISOString()
+                };
+
+                saveTrip(currentTrip);
+                showResults();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function buildPrompt(days, tripType, options, destination) {
+            const typeDesc = { 'solo_day': 'solo day trip', 'solo_multi': 'solo multi-day trip', 'family_multi': 'family multi-day trip' }[tripType] || 'trip';
+            const opts = [];
+            if (options.work) opts.push('work trip');
+            if (options.international) opts.push('international travel');
+            if (options.outdoor) opts.push('outdoor activities');
+            if (options.beach) opts.push('beach/pool');
+            if (options.formal) opts.push('formal event');
+            if (options.cold) opts.push('cold weather');
+            const optsText = opts.length > 0 ? opts.join(', ') : 'standard trip';
+
+            return `Generate a packing list for a ${days}-day ${typeDesc} to ${destination}.
+Trip characteristics: ${optsText}.
+
+Guidelines:
+- Clothes: underwear = days+1, socks = days+1, t-shirts = days, pants = ceil(days/2)
+- Always include: phone charger, toiletries basics, any medications
+- If work trip: add laptop, work clothes
+- If international: add passport, travel adapter
+- If formal: add dress clothes
+- If beach: add swimsuit, sunscreen
+- If cold: add warm layers, hat, gloves
+- If outdoor: add comfortable shoes, water bottle
+
+Return ONLY valid JSON (no markdown) with this structure:
+{
+  "categories": {
+    "Clothes": {"t-shirt": {"qty": 3, "weight": 150}, "pants": {"qty": 2, "weight": 400}},
+    "Electronics": {"phone charger": {"qty": 1, "weight": 100}},
+    "Toiletries": {"toothbrush": {"qty": 1, "weight": 30}}
+  }
+}
+Each item needs qty (quantity) and weight (estimated grams per item).`;
+        }
+
+        function generateTripId() {
+            const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+            const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)];
+            return adj + '-' + noun;
+        }
+
+        function showResults() {
+            document.getElementById('form-section').style.display = 'none';
+            document.getElementById('hero').style.display = 'none';
+            document.getElementById('trips-section').style.display = 'none';
+            document.getElementById('results').classList.add('active');
+            document.getElementById('trip-id-display').textContent = currentTrip.id;
+            renderPackingList();
+            updateProgress();
+        }
+
+        function renderPackingList() {
+            const container = document.getElementById('packing-list');
+            container.replaceChildren();
+
+            const list = currentTrip.packingList;
+            const states = currentTrip.itemStates;
+
+            for (const [category, items] of Object.entries(list)) {
+                const emoji = CATEGORY_EMOJIS[category] || '📦';
+
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = emoji + ' ' + category;
+                categoryDiv.appendChild(header);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'category-items';
+
+                for (const [item, details] of Object.entries(items)) {
+                    const itemId = category + ':' + item;
+                    const packed = states[itemId] || false;
+                    const qty = details.qty || 1;
+
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item' + (packed ? ' packed' : '');
+                    itemDiv.addEventListener('click', () => toggleItem(itemId));
+
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'item-checkbox';
+                    checkbox.textContent = packed ? '✓' : '';
+                    itemDiv.appendChild(checkbox);
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'item-name';
+                    nameSpan.textContent = item;
+                    itemDiv.appendChild(nameSpan);
+
+                    if (qty > 1) {
+                        const qtySpan = document.createElement('span');
+                        qtySpan.className = 'item-qty';
+                        qtySpan.textContent = '×' + qty;
+                        itemDiv.appendChild(qtySpan);
+                    }
+
+                    itemsDiv.appendChild(itemDiv);
+                }
+
+                categoryDiv.appendChild(itemsDiv);
+                container.appendChild(categoryDiv);
+            }
+        }
+
+        function toggleItem(itemId) {
+            currentTrip.itemStates[itemId] = !currentTrip.itemStates[itemId];
+            saveTrip(currentTrip);
+            renderPackingList();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const list = currentTrip.packingList;
+            const states = currentTrip.itemStates;
+            let total = 0, packed = 0;
+            for (const [category, items] of Object.entries(list)) {
+                for (const item of Object.keys(items)) {
+                    total++;
+                    if (states[category + ':' + item]) packed++;
+                }
+            }
+            const pct = total > 0 ? Math.round((packed / total) * 100) : 0;
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = pct + '% packed (' + packed + '/' + total + ')';
+        }
+
+        function newTrip() {
+            if (currentTrip && !confirm('Start a new trip?')) return;
+            currentTrip = null;
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('form-section').style.display = 'block';
+            document.getElementById('hero').style.display = 'block';
+            document.getElementById('trips-section').style.display = 'block';
+            document.getElementById('destination').value = '';
+            document.querySelectorAll('.toggle-item').forEach(el => el.classList.remove('active'));
+            loadTrips();
+        }
+
+        function saveTrip(trip) {
+            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
+            trips[trip.id] = trip;
+            localStorage.setItem('trips', JSON.stringify(trips));
+        }
+
+        function loadTripById(tripId) {
+            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
+            return trips[tripId];
+        }
+
+        function deleteTripById(tripId) {
+            if (!confirm('Delete trip "' + tripId + '"?')) return;
+            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
+            delete trips[tripId];
+            localStorage.setItem('trips', JSON.stringify(trips));
+            loadTrips();
+        }
+
+        function openTripById(tripId) {
+            currentTrip = loadTripById(tripId);
+            if (currentTrip) showResults();
+        }
+
+        function toggleTrips() {
+            document.getElementById('trips-section').classList.toggle('expanded');
+        }
+
+        function loadTrips() {
+            const trips = JSON.parse(localStorage.getItem('trips') || '{}');
+            const tripList = Object.values(trips).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            document.getElementById('trips-count').textContent = '(' + tripList.length + ')';
+
+            const content = document.getElementById('trips-content');
+            content.replaceChildren();
+
+            if (tripList.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-state';
+                empty.textContent = 'No trips yet. Create one above!';
+                content.appendChild(empty);
+                return;
+            }
+
+            const typeLabels = { 'solo_day': 'Solo Day', 'solo_multi': 'Solo Multi-Day', 'family_multi': 'Family' };
+
+            tripList.forEach(trip => {
+                const div = document.createElement('div');
+                div.className = 'trip-item';
+
+                const info = document.createElement('div');
+                const name = document.createElement('div');
+                name.className = 'trip-item-name';
+                name.textContent = trip.id;
+                info.appendChild(name);
+
+                const meta = document.createElement('div');
+                meta.className = 'trip-item-meta';
+                meta.textContent = (trip.destination || 'Unknown') + ' · ' + (typeLabels[trip.tripType] || 'Trip') + ' · ' + trip.days + ' days';
+                info.appendChild(meta);
+                div.appendChild(info);
+
+                const actions = document.createElement('div');
+                actions.className = 'trip-item-actions';
+
+                const openBtn = document.createElement('button');
+                openBtn.className = 'primary';
+                openBtn.textContent = 'Open';
+                openBtn.addEventListener('click', () => openTripById(trip.id));
+                actions.appendChild(openBtn);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'danger';
+                delBtn.textContent = 'Delete';
+                delBtn.addEventListener('click', () => deleteTripById(trip.id));
+                actions.appendChild(delBtn);
+
+                div.appendChild(actions);
+                content.appendChild(div);
+            });
+        }
+
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
