@@ -2537,11 +2537,16 @@
                 <span class="trips-browser-toggle">▼</span>
             </div>
             <div class="trips-browser-content">
-                <div class="trips-filter">
+                <div class="trips-filter" style="display: flex; justify-content: space-between; align-items: center;">
                     <label>
                         <input type="checkbox" id="show-archived" onchange="loadTrips()">
                         Show archived
                     </label>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="document.getElementById('import-file').click()" style="padding: 4px 10px; font-size: 0.8rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">Import</button>
+                        <button onclick="exportAllTrips()" style="padding: 4px 10px; font-size: 0.8rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">Export All</button>
+                    </div>
+                    <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importTripFile(event)">
                 </div>
                 <div class="trips-list" id="trips-list">
                     <div class="trips-empty">Loading trips...</div>
@@ -3036,18 +3041,30 @@
         }
         
         async function validateAndSaveKey(key) {
+            if (!key || !key.trim()) {
+                alert('Please enter an API key');
+                return false;
+            }
             try {
-                const resp = await fetch(PROXY_URL + '/v1/models', {
-                    headers: { 'Authorization': 'Bearer ' + key }
+                // Validate with a minimal chat completion request
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: 'hi' }],
+                        max_tokens: 1
+                    })
                 });
-                if (!resp.ok) throw new Error('Invalid key');
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error.message || 'Invalid key');
                 apiKey = key;
                 localStorage.setItem('openai_api_key', key);
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-app').style.display = 'block';
                 return true;
             } catch(e) {
-                alert('Invalid API key');
+                alert('Invalid API key: ' + e.message);
                 return false;
             }
         }
@@ -3069,10 +3086,114 @@
         // LocalStorage for preparations
         function getPreparations() { return JSON.parse(localStorage.getItem('bagbuddy_preparations') || '[]'); }
         function savePreparations(preps) { localStorage.setItem('bagbuddy_preparations', JSON.stringify(preps)); }
+
+        // Import/Export functions
+        function importTripFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const tripId = file.name.replace('.json', '').replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+                    importTripData(tripId, data);
+                } catch (err) {
+                    alert('Invalid JSON file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset for re-import
+        }
+
+        function importTripData(tripId, data) {
+            // Ensure unique ID
+            let finalId = tripId;
+            const existing = getTrips();
+            let counter = 1;
+            while (existing[finalId]) {
+                finalId = tripId + '-' + counter++;
+            }
+            saveTripById(finalId, data);
+            loadTrips();
+            alert(`Trip imported as "${finalId}"`);
+        }
+
+        function exportAllTrips() {
+            const trips = getTrips();
+            const blob = new Blob([JSON.stringify(trips, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bagbuddy-trips-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportCurrentTrip() {
+            if (!currentTripId) return;
+            const data = getTripById(currentTripId);
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentTripId + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
         
-        // LocalStorage for prompts  
+        // LocalStorage for prompts
         function getPrompts() { return JSON.parse(localStorage.getItem('bagbuddy_prompts') || '[]'); }
         function savePromptsData(prompts) { localStorage.setItem('bagbuddy_prompts', JSON.stringify(prompts)); }
+
+        // OpenAI API helper for weight estimation
+        async function estimateWeightViaAI(itemName, category) {
+            const prompt = `Estimate the weight in grams for this packing item: "${itemName}" (category: ${category}).
+Reply with ONLY a number representing the weight in grams. No units, no explanation, just the number.
+For example, if it's a toothbrush, reply: 30`;
+
+            const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 50
+                })
+            });
+            const data = await resp.json();
+            if (data.error) throw new Error(data.error.message || 'API error');
+            const content = data.choices[0].message.content.trim();
+            const weight = parseInt(content.replace(/[^\d]/g, ''), 10);
+            if (isNaN(weight)) throw new Error('Could not parse weight');
+            return weight;
+        }
+
+        // OpenAI API helper for bulk weight estimation
+        async function estimateWeightsViaAI(items) {
+            const itemList = items.map(i => `- ${i.name} (${i.category})`).join('\n');
+            const prompt = `Estimate the weight in grams for each of these packing items:
+${itemList}
+
+Reply with a JSON object where keys are the exact item names and values are weights in grams.
+Example: {"toothbrush": 30, "laptop": 1500}`;
+
+            const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: 2000
+                })
+            });
+            const data = await resp.json();
+            if (data.error) throw new Error(data.error.message || 'API error');
+            const content = data.choices[0].message.content.trim();
+            // Extract JSON from response (might be wrapped in markdown code blocks)
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) throw new Error('Could not parse weights');
+            return JSON.parse(jsonMatch[0]);
+        }
 
         // Mobile detection and DOM manipulation
         (function() {
@@ -3627,16 +3748,18 @@
             if (name === null) return;
             try {
                 await saveTripState();
-                const resp = await fetch('/api/preparations', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ trip_id: currentTripId, name: name.trim() || currentTripId })
-                });
-                const data = await resp.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Failed to save preparation');
-                }
-                alert(`Saved as "${data.preparation.name}". Open Saved Preparations to start from it next time.`);
+                const tripData = getTripById(currentTripId);
+                const preps = getPreparations();
+                const prep = {
+                    id: 'prep-' + Date.now(),
+                    name: name.trim() || currentTripId,
+                    trip_id: currentTripId,
+                    created: new Date().toISOString().split('T')[0],
+                    data: tripData
+                };
+                preps.push(prep);
+                savePreparations(preps);
+                alert(`Saved as "${prep.name}". Open Saved Preparations to start from it next time.`);
             } catch (e) {
                 console.error('Save preparation error:', e);
                 alert('Could not save this preparation. Please try again.');
@@ -4300,21 +4423,11 @@ ALWAYS include the bags array with the organization above.`;
             btn.textContent = '✨ Estimating...';
 
             try {
-                const resp = await fetch('/api/estimate-single-weight', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: state.name,
-                        category: state.category || 'Other'
-                    })
-                });
-                const data = await resp.json();
-
-                if (data.error) throw new Error(data.error);
+                const weight = await estimateWeightViaAI(state.name, state.category || 'Other');
 
                 // Show the estimated weight in the input field
-                document.getElementById('weight-input').value = data.weight;
-                showStatus(`Estimated: ${formatWeight(data.weight)}`, 'success');
+                document.getElementById('weight-input').value = weight;
+                showStatus(`Estimated: ${formatWeight(weight)}`, 'success');
 
             } catch (e) {
                 console.error('Weight estimation error:', e);
@@ -4332,24 +4445,14 @@ ALWAYS include the bags array with the organization above.`;
             showStatus(`Estimating weight for ${state.name}...`, 'info');
 
             try {
-                const resp = await fetch('/api/estimate-single-weight', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: state.name,
-                        category: state.category || 'Other'
-                    })
-                });
-                const data = await resp.json();
-
-                if (data.error) throw new Error(data.error);
+                const weight = await estimateWeightViaAI(state.name, state.category || 'Other');
 
                 pushHistory();
-                state.weight = data.weight;
+                state.weight = weight;
 
                 // Update the weight in currentList too
                 if (currentList && state.category && currentList[state.category] && currentList[state.category][state.name]) {
-                    currentList[state.category][state.name].weight = data.weight;
+                    currentList[state.category][state.name].weight = weight;
                 }
 
                 renderPackingList(currentList);
@@ -4361,7 +4464,7 @@ ALWAYS include the bags array with the organization above.`;
                     openCubeModal(currentOpenBag);
                 }
 
-                showStatus(`${state.name}: ${formatWeight(data.weight)}`, 'success');
+                showStatus(`${state.name}: ${formatWeight(weight)}`, 'success');
 
             } catch (e) {
                 console.error('Weight estimation error:', e);
@@ -4821,9 +4924,8 @@ ALWAYS include the bags array with the organization above.`;
             return modelStats ? modelStats.avg_latency_ms : 10000;
         }
 
-        async function openPromptManager() {
-            const resp = await fetch('/api/prompts');
-            savedPrompts = await resp.json();
+        function openPromptManager() {
+            savedPrompts = getPrompts();
             renderPromptList();
             document.getElementById('prompt-manager').classList.add('active');
         }
@@ -4868,54 +4970,53 @@ ALWAYS include the bags array with the organization above.`;
             document.getElementById('prompt-name-input').focus();
         }
 
-        async function confirmSavePrompt() {
+        function confirmSavePrompt() {
             const name = document.getElementById('prompt-name-input').value.trim();
             if (!name) {
                 alert('Please enter a name for the prompt');
                 return;
             }
             const content = document.getElementById('prompt-editor').value;
-            await fetch('/api/prompts', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, content })
+            const prompts = getPrompts();
+            prompts.push({
+                id: 'prompt-' + Date.now(),
+                name,
+                content,
+                created: new Date().toISOString().split('T')[0]
             });
+            savePromptsData(prompts);
             closePopup('save-prompt-popup');
         }
 
-        async function editPrompt(id) {
+        function editPrompt(id) {
             const prompt = savedPrompts.find(p => p.id === id);
             if (!prompt) return;
             const newName = window.prompt('Edit prompt name:', prompt.name);
             if (newName && newName !== prompt.name) {
-                await fetch(`/api/prompts/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: newName, content: prompt.content })
-                });
+                const prompts = getPrompts();
+                const idx = prompts.findIndex(p => p.id === id);
+                if (idx !== -1) {
+                    prompts[idx].name = newName;
+                    savePromptsData(prompts);
+                }
                 openPromptManager(); // refresh
             }
         }
 
-        async function deletePrompt(id) {
+        function deletePrompt(id) {
             if (!confirm('Delete this prompt?')) return;
-            await fetch(`/api/prompts/${id}`, { method: 'DELETE' });
+            const prompts = getPrompts().filter(p => p.id !== id);
+            savePromptsData(prompts);
             if (selectedPromptId === id) selectedPromptId = null;
             openPromptManager(); // refresh
         }
 
         // Preparation Management
-        async function openPreparationManager() {
-            try {
-                const resp = await fetch('/api/preparations');
-                savedPreparations = await resp.json();
-                selectedPreparationId = null;
-                renderPreparationList();
-                document.getElementById('preparation-manager').classList.add('active');
-            } catch (e) {
-                console.error('Failed to load preparations:', e);
-                alert('Could not load saved preparations.');
-            }
+        function openPreparationManager() {
+            savedPreparations = getPreparations();
+            selectedPreparationId = null;
+            renderPreparationList();
+            document.getElementById('preparation-manager').classList.add('active');
         }
 
         function renderPreparationList() {
@@ -4940,20 +5041,18 @@ ALWAYS include the bags array with the organization above.`;
             renderPreparationList();
         }
 
-        async function loadSelectedPreparation() {
+        function loadSelectedPreparation() {
             if (!selectedPreparationId) return;
-            try {
-                const resp = await fetch(`/api/preparations/${selectedPreparationId}/instantiate`, { method: 'POST' });
-                const data = await resp.json();
-                if (!data.success) {
-                    throw new Error(data.error || 'Unable to load preparation');
-                }
-                closePopup('preparation-manager');
-                loadTripState(data.trip_id, data.trip_data, true);
-            } catch (e) {
-                console.error('Failed to load preparation:', e);
+            const prep = savedPreparations.find(p => p.id === selectedPreparationId);
+            if (!prep || !prep.data) {
                 alert('Could not load that preparation.');
+                return;
             }
+            // Create a new trip from the preparation
+            const newTripId = generateTripId();
+            saveTripById(newTripId, prep.data);
+            closePopup('preparation-manager');
+            loadTripState(newTripId, prep.data, true);
         }
 
         // Generation Progress
@@ -5323,60 +5422,64 @@ ALWAYS include the bags array with the organization above.`;
             if (e.key === 'Enter') sendAiAction();
         });
 
-        function sendAiAction() {
+        async function sendAiAction() {
             const input = document.getElementById('ai-action-input');
             const btn = document.getElementById('ai-action-btn');
             const action = input.value.trim();
             if (!action) return;
 
-            const precision = document.getElementById('precision-select').value;
-            const sensitive = document.getElementById('sensitive-toggle').classList.contains('active');
-
             btn.disabled = true;
             btn.textContent = '🤖 Thinking...';
 
             // Build current state for context
-            const currentState = {
-                packing_list: currentList,
-                packing_cubes: packingCubes,
-                item_states: itemStates,
-                suitcase_items: suitcaseItems,
-                backpack_items: backpackItems
-            };
+            const itemsList = Object.values(itemStates).map(s => s.name).join(', ');
+            const cubesList = Object.entries(packingCubes).map(([id, c]) => `${c.name}: ${c.items.map(i => itemStates[i]?.name || i).join(', ')}`).join('; ');
 
-            fetch('/api/ai-action', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: action,
-                    current_state: currentState,
-                    trip_id: currentTripId,
-                    precision: precision,
-                    sensitive: sensitive
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) {
-                    alert('AI Error: ' + data.error);
-                } else {
-                    // Apply the changes from the LLM
-                    applyAiChanges(data.changes);
-                    input.value = '';
-                    // Update model badge
-                    if (data.model_used) {
-                        document.getElementById('model-badge').textContent = '🤖 Model: ' + data.model_used;
-                    }
-                }
-                btn.disabled = false;
-                btn.textContent = 'Send';
-            })
-            .catch(e => {
+            const prompt = `You are a packing assistant. The user has these items: ${itemsList}
+
+Current bags/cubes: ${cubesList}
+
+User request: "${action}"
+
+Respond with a JSON object describing changes. Available actions:
+- create_cubes: [{emoji: "📦", name: "Cube Name", bag: "suitcase"|"backpack"}]
+- move_to_bag: [{item: "item name", bag: "suitcase"|"backpack"}]
+- move_to_cube: [{item: "item name", cube: "cube name"}]
+- add_items: [{name: "item name", category: "Category", count: 1}]
+- remove_items: ["item name"]
+
+Only include actions needed. Example response:
+{"move_to_cube": [{"item": "toothbrush", "cube": "Toiletry"}]}`;
+
+            try {
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({
+                        model: 'gpt-4o',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 2000
+                    })
+                });
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error.message || 'API error');
+
+                const content = data.choices[0].message.content.trim();
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error('Could not parse response');
+
+                const changes = JSON.parse(jsonMatch[0]);
+                applyAiChanges(changes);
+                input.value = '';
+                document.getElementById('model-badge').textContent = '🤖 Model: gpt-4o';
+
+            } catch (e) {
                 console.error('AI action error:', e);
                 alert('Error: ' + e.message);
-                btn.disabled = false;
-                btn.textContent = 'Send';
-            });
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Send';
         }
 
         function applyBagsFromLLM(bags) {
@@ -5517,38 +5620,8 @@ ALWAYS include the bags array with the organization above.`;
         }
 
         function saveToTodoist() {
-            const listName = document.getElementById('list-name').value.trim();
-            if (!listName) {
-                showStatus('Please enter a name for your packing list', 'error');
-                return;
-            }
-
-            const btn = document.querySelector('.btn-save');
-            btn.disabled = true;
-            btn.innerHTML = '<span>⏳</span> Saving...';
-
-            // Build export list (include all items, custom items included via currentList)
-            fetch('/api/save-todoist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: listName, packing_list: currentList })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showStatus('Packing list saved to Todoist!', 'success');
-                    btn.innerHTML = '<span>✓</span> Saved!';
-                } else {
-                    showStatus(data.error || 'Failed to save', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<span>✓</span> Save to Todoist';
-                }
-            })
-            .catch(e => {
-                showStatus('Error saving to Todoist', 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<span>✓</span> Save to Todoist';
-            });
+            // Todoist integration not available in client-side version
+            showStatus('Todoist integration not available in this version', 'info');
         }
 
         function showStatus(message, type) {
@@ -5760,13 +5833,13 @@ ALWAYS include the bags array with the organization above.`;
             updateUndoRedoButtons();
         }
 
-        function generatePackingSummary() {
+        async function generatePackingSummary() {
             const btn = document.querySelector('.summary-btn');
             btn.disabled = true;
             btn.textContent = '🤖 Thinking...';
 
             // Show loading state in panel
-            document.getElementById('summary-content').innerHTML = '<div style="color: var(--text-muted);">Generating summary…</div>';
+            document.getElementById('summary-content').innerHTML = '<div style="color: var(--text-muted);">Generating summary...</div>';
             document.getElementById('packing-summary').style.display = 'block';
 
             // Build the current state for the LLM
@@ -5789,33 +5862,44 @@ ALWAYS include the bags array with the organization above.`;
                 }
             }
 
-            fetch('/api/packing-summary', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    packed_items: packedItems,
-                    unpacked_items: unpackedItems,
-                    bag_contents: bagContents
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.error) throw new Error(data.error);
-                if (!data.summary) throw new Error('No summary returned');
+            const prompt = `Generate a brief packing summary for this trip. Be concise and helpful.
 
-                document.getElementById('summary-content').innerHTML = data.summary;
-                document.getElementById('packing-summary').style.display = 'block';
+Packed items (${packedItems.length}): ${packedItems.join(', ')}
+Unpacked items (${unpackedItems.length}): ${unpackedItems.join(', ')}
 
-                btn.disabled = false;
-                btn.textContent = '📋 Summary';
-            })
-            .catch(e => {
+Bag organization:
+${Object.entries(bagContents).map(([name, b]) => `${b.emoji} ${name}: ${b.items.join(', ')}`).join('\n')}
+
+Provide a brief summary with:
+1. Total items packed vs unpacked
+2. Any suggestions for items that might be missing
+3. A brief readiness assessment
+
+Format your response as HTML with simple tags like <strong>, <ul>, <li>.`;
+
+            try {
+                const resp = await fetch(PROXY_URL + '/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({
+                        model: 'gpt-4o-mini',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 1000
+                    })
+                });
+                const data = await resp.json();
+                if (data.error) throw new Error(data.error.message || 'API error');
+
+                const summary = data.choices[0].message.content.trim();
+                document.getElementById('summary-content').innerHTML = summary;
+
+            } catch (e) {
                 console.error('Summary error:', e);
-                btn.disabled = false;
-                btn.textContent = '📋 Summary';
                 document.getElementById('summary-content').innerHTML = `<div style="color: var(--danger-color);">Summary failed: ${e.message}</div>`;
-                document.getElementById('packing-summary').style.display = 'block';
-            });
+            }
+
+            btn.disabled = false;
+            btn.textContent = '📋 Summary';
         }
 
         function closeSummary() {
@@ -7317,18 +7401,11 @@ ALWAYS include the bags array with the organization above.`;
             }
 
             try {
-                const resp = await fetch('/api/estimate-weights', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ items })
-                });
-                const data = await resp.json();
-
-                if (data.error) throw new Error(data.error);
+                const weights = await estimateWeightsViaAI(items);
 
                 // Apply weights to item states
                 for (const [itemId, state] of Object.entries(itemStates)) {
-                    const weight = data.weights[state.name];
+                    const weight = weights[state.name];
                     if (weight !== undefined) {
                         state.weight = weight;
                     }
